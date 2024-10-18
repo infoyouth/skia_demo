@@ -76,3 +76,4 @@ jobs:
         base: main
         branch: topic-update  # A fixed branch name for the PR
         commit-message: "Add generated markdown for ${{ steps.read_topic.outputs.topic }} on ${{ steps.read_topic.outputs.date }}"
+        token: ${{ secrets.GITHUB_TOKEN }}
