@@ -21,7 +21,8 @@ jobs:
     - name: Install dependencies
       run: |
         pip install --upgrade pip
-        pip install torch transformers markdownify  # Install PyTorch and transformers
+        pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cpu
+        pip install transformers markdownify
 
     - name: Read topic from JSON
       id: read_topic
@@ -67,12 +68,11 @@ jobs:
             f.write(markdown_content)
         EOF
 
-    - name: Commit generated markdown
-      run: |
-        git config --local user.email "info.youthinno@gmail.com"
-        git config --local user.name "Youth Inoovations"
-        git add *.md
-        git commit -m "Add generated markdown for ${{ steps.read_topic.outputs.topic }} on ${{ steps.read_topic.outputs.date }}"
-        git push origin HEAD:main
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Use the GitHub token for authentication
+    - name: Create Pull Request
+      uses: peter-evans/create-pull-request@v4
+      with:
+        title: "Add generated markdown for ${{ steps.read_topic.outputs.topic }} on ${{ steps.read_topic.outputs.date }}"
+        body: "This PR contains a generated markdown file about **${{ steps.read_topic.outputs.topic }}**."
+        base: main
+        head: topic-update-${{ github.run_id }}  # Create a unique branch name
+        paths: "*.md"  # Specify that only markdown files should be included in the PR
