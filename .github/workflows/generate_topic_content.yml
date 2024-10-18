@@ -5,76 +5,62 @@ on:
     - cron: '0 * * * *'  # Runs every hour
   workflow_dispatch:
 permissions:
-  contents: write 
+  contents: write  # Ensure that the action can push to the repository
+
 jobs:
-  generate:
+  generate-markdown:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v2
+      - name: Checkout code
+        uses: actions/checkout@v3  # Updated to v3
 
-    - name: Set up Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: '3.9'
+      - name: Set up Python
+        uses: actions/setup-python@v4  # Latest version compatible with Node.js 20
+        with:
+          python-version: '3.9'
 
-    - name: Install dependencies
-      run: |
-        pip install --upgrade pip
-        pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cpu
-        pip install transformers markdownify
+      - name: Install Required Packages
+        run: |
+          pip install transformers markdownify
 
-    - name: Read topic from JSON
-      id: read_topic
-      run: |
-        python - <<EOF
-        import json
-        from datetime import datetime
-        with open('topics.json', 'r') as f:
-            data = json.load(f)
-        today = datetime.today().strftime('%d-%m-%Y')
-        for entry in data['topics']:
-            if entry['date'] == today:
-                print(f"::set-output name=topic::{entry['topic']}")
-                print(f"::set-output name=date::{entry['date']}")
-                break
-        EOF
+      - name: Generate Markdown
+        run: |
+          import markdownify
+          from transformers import pipeline
+          from datetime import datetime
+          import os
 
-    - name: Generate content using GPT-2
-      id: generate_content
-      run: |
-        python - <<EOF
-        from transformers import pipeline
-        import markdownify
-        from datetime import datetime
+          topic = 'C Pointers'
+          today = datetime.today().strftime('%d-%m-%Y')
 
-        topic = '${{ steps.read_topic.outputs.topic }}'
-        today = datetime.today().strftime('%d-%m-%Y')
+          # Initialize GPT-2 text generation model
+          gpt2_pipeline = pipeline("text-generation", model="gpt2")
 
-        # Initialize GPT-2 text generation model
-        gpt2_pipeline = pipeline("text-generation", model="gpt2")
+          # Provide a prompt for the model
+          prompt = f"Write a tutorial about {topic} covering Introduction, Key Concepts, How to Use, Common Pitfalls, and Advanced Use Cases."
 
-        # Provide a prompt for the model
-        prompt = f"Write a tutorial about {topic} covering Introduction, Key Concepts, How to Use, Common Pitfalls, and Advanced Use Cases."
+          # Generate the text from GPT-2
+          generated_text = gpt2_pipeline(prompt, max_length=1000)[0]['generated_text']
+          markdown_content = markdownify.markdownify(generated_text)
 
-        # Generate the text from GPT-2
-        generated_text = gpt2_pipeline(prompt, max_length=1000)[0]['generated_text']
-        markdown_content = markdownify.markdownify(generated_text)
+          # Write the markdown content to a file
+          filename = f"{today}_{topic.replace(' ', '_')}.md"
+          with open(filename, 'w') as f:
+              f.write(f"# {topic}\n\n")
+              f.write(markdown_content)
 
-        # Write the markdown content to a file
-        filename = f"{today}_{topic.replace(' ', '_')}.md"
-        with open(filename, 'w') as f:
-            f.write(f"# {topic}\n\n")
-            f.write(markdown_content)
-        EOF
+          # Set output to environment variable
+          print(f"MARKDOWN_FILENAME={filename}")  # Use this format to set output in GitHub Actions
+          with open(os.environ['GITHUB_ENV'], 'a') as env_file:
+              env_file.write(f'MARKDOWN_FILENAME={filename}\n')
 
-    - name: Create Pull Request
-      uses: peter-evans/create-pull-request@v4
-      with:
-        title: "Add generated markdown for ${{ steps.read_topic.outputs.topic }} on ${{ steps.read_topic.outputs.date }}"
-        body: "This PR contains a generated markdown file about **${{ steps.read_topic.outputs.topic }}**."
-        base: main
-        branch: topic-update  # A fixed branch name for the PR
-        commit-message: "Add generated markdown for ${{ steps.read_topic.outputs.topic }} on ${{ steps.read_topic.outputs.date }}"
-        token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v4  # Ensure this is the latest version
+        with:
+          title: "Add generated markdown for C Pointers on ${{ env.MARKDOWN_FILENAME }}"
+          body: "This PR contains a generated markdown file about **C Pointers**."
+          base: main
+          branch: topic-update
+          commit-message: "Add generated markdown for C Pointers on ${{ env.MARKDOWN_FILENAME }}"
+          token: ${{ secrets.GITHUB_TOKEN }}
