@@ -50,6 +50,7 @@ jobs:
       - name: Generate content using GPT-2
         id: generate_content
         run: |
+          python - <<EOF
           from transformers import pipeline
           import markdownify
           from datetime import datetime
@@ -72,7 +73,7 @@ jobs:
           with open(filename, 'w') as f:
               f.write(f"# {topic}\n\n")
               f.write(markdown_content)
-
+          EOF
       - name: Commit and Push generated content
         run: |
           git config --global user.name "GitHub Actions Bot"
