@@ -23,7 +23,10 @@ jobs:
       - name: Install Required Packages
         run: |
           pip install transformers markdownify
-
+          # Install either TensorFlow or PyTorch
+          pip install torch  # This installs PyTorch
+          # Or, for TensorFlow, uncomment the next line
+          # pip install tensorflow
       - name: Generate Markdown
         run: |
           python - <<EOF
