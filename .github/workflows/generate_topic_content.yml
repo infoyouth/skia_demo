@@ -6,6 +6,7 @@ on:
   workflow_dispatch:
 permissions:
   contents: write  # Ensure that the action can push to the repository
+  pull-requests: write
 
 jobs:
   generate-markdown:
