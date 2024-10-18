@@ -70,7 +70,9 @@ jobs:
     - name: Commit generated markdown
       run: |
         git config --local user.email "info.youthinno@gmail.com"
-        git config --local user.name "Youth Innovations"
+        git config --local user.name "Youth Inoovations"
         git add *.md
         git commit -m "Add generated markdown for ${{ steps.read_topic.outputs.topic }} on ${{ steps.read_topic.outputs.date }}"
-        git push
+        git push origin HEAD:main
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Use the GitHub token for authentication
