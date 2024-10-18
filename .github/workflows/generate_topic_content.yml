@@ -26,6 +26,7 @@ jobs:
 
       - name: Generate Markdown
         run: |
+          python - <<EOF
           import markdownify
           from transformers import pipeline
           from datetime import datetime
@@ -54,7 +55,7 @@ jobs:
           print(f"MARKDOWN_FILENAME={filename}")  # Use this format to set output in GitHub Actions
           with open(os.environ['GITHUB_ENV'], 'a') as env_file:
               env_file.write(f'MARKDOWN_FILENAME={filename}\n')
-
+          EOF
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v4  # Ensure this is the latest version
         with:
