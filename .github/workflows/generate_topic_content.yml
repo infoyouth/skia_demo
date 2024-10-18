@@ -69,8 +69,8 @@ jobs:
 
     - name: Commit generated markdown
       run: |
-        git config --local user.email "your-email@example.com"
-        git config --local user.name "Your Name"
+        git config --local user.email "info.youthinno@gmail.com"
+        git config --local user.name "Youth Innovations"
         git add *.md
         git commit -m "Add generated markdown for ${{ steps.read_topic.outputs.topic }} on ${{ steps.read_topic.outputs.date }}"
         git push
