@@ -26,32 +26,50 @@ jobs:
       - name: Read topic from JSON file
         id: read_topic
         run: |
+          python - <<EOF
           import json
           from datetime import datetime
+          
           with open('topics.json', 'r') as f:
               data = json.load(f)
+          
           today = datetime.today().strftime('%d-%m-%Y')
+          topic_found = False
+          
           for entry in data['topics']:
               if entry['date'] == today:
                   print(f"::set-output name=topic::{entry['topic']}")
                   print(f"::set-output name=date::{entry['date']}")
+                  topic_found = True
                   break
+          
+          if not topic_found:
+              raise ValueError(f"No topic found for today's date: {today}")
+          EOF
 
       - name: Generate content using GPT-2
         id: generate_content
         run: |
           from transformers import pipeline
           import markdownify
-
+          from datetime import datetime
+          
           topic = '${{ steps.read_topic.outputs.topic }}'
+          today = datetime.today().strftime('%d-%m-%Y')
+
+          # Initialize GPT-2 text generation model
           gpt2_pipeline = pipeline("text-generation", model="gpt2")
           
+          # Provide a prompt for the model
           prompt = f"Write a tutorial about {topic} covering Introduction, Key Concepts, How to Use, Common Pitfalls, and Advanced Use Cases."
 
+          # Generate the text from GPT-2
           generated_text = gpt2_pipeline(prompt, max_length=1000)[0]['generated_text']
           markdown_content = markdownify.markdownify(generated_text)
 
-          with open(f"{today}_{topic.replace(' ', '_')}.md", 'w') as f:
+          # Write the markdown content to a file
+          filename = f"{today}_{topic.replace(' ', '_')}.md"
+          with open(filename, 'w') as f:
               f.write(f"# {topic}\n\n")
               f.write(markdown_content)
 
