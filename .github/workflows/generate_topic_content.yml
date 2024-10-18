@@ -74,5 +74,5 @@ jobs:
         title: "Add generated markdown for ${{ steps.read_topic.outputs.topic }} on ${{ steps.read_topic.outputs.date }}"
         body: "This PR contains a generated markdown file about **${{ steps.read_topic.outputs.topic }}**."
         base: main
-        head: topic-update-${{ github.run_id }}  # Create a unique branch name
-        paths: "*.md"  # Specify that only markdown files should be included in the PR
+        branch: topic-update  # A fixed branch name for the PR
+        commit-message: "Add generated markdown for ${{ steps.read_topic.outputs.topic }} on ${{ steps.read_topic.outputs.date }}"
