@@ -33,16 +33,16 @@ jobs:
       - name: Set Environment Variables
         run: echo "GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}" >> $GITHUB_ENV
 
-      - name: Generate Markdown
+      - name: Generate Tutorial
         run: |
           python generate_gemini.py  # Assuming your script is named generate_gemini.py
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v4  # Ensure this is the latest version
         with:
-          title: "Add generated markdown for ${{ env.MARKDOWN_FILENAME }}"
-          body: "This PR contains a generated markdown file."
+          title: "Notes generated for ${{ env.MARKDOWN_FILENAME }}"
+          body: "This PR contains a generated notes."
           base: main
           branch: topic-update
-          commit-message: "Add generated markdown for ${{ env.MARKDOWN_FILENAME }}"
+          commit-message: "Totorials generated and file created ${{ env.MARKDOWN_FILENAME }}"
           token: ${{ secrets.GITHUB_TOKEN }}
