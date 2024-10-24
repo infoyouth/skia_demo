@@ -2,8 +2,9 @@ name: Generate Topic Content
 
 on:
   schedule:
-    - cron: '0 * * * *'  # Runs every hour
+    - cron: '0 0 * * 0'  # Runs at midnight every Sunday
   workflow_dispatch:
+
 permissions:
   contents: write  # Ensure that the action can push to the repository
   pull-requests: write
@@ -28,44 +29,20 @@ jobs:
           pip install torch  # This installs PyTorch
           # Or, for TensorFlow, uncomment the next line
           # pip install tensorflow
+
+      - name: Set Environment Variables
+        run: echo "GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}" >> $GITHUB_ENV
+
       - name: Generate Markdown
         run: |
-          python - <<EOF
-          import markdownify
-          from transformers import pipeline
-          from datetime import datetime
-          import os
+          python generate_gemini.py  # Assuming your script is named generate_gemini.py
 
-          topic = 'C Pointers'
-          today = datetime.today().strftime('%d-%m-%Y')
-
-          # Initialize GPT-2 text generation model
-          gpt2_pipeline = pipeline("text-generation", model="gpt2")
-
-          # Provide a prompt for the model
-          prompt = f"Write a tutorial about {topic} covering Introduction, Key Concepts, How to Use, Common Pitfalls, and Advanced Use Cases."
-
-          # Generate the text from GPT-2
-          generated_text = gpt2_pipeline(prompt, max_length=1000)[0]['generated_text']
-          markdown_content = markdownify.markdownify(generated_text)
-
-          # Write the markdown content to a file
-          filename = f"{today}_{topic.replace(' ', '_')}.md"
-          with open(filename, 'w') as f:
-              f.write(f"# {topic}\n\n")
-              f.write(markdown_content)
-
-          # Set output to environment variable
-          print(f"MARKDOWN_FILENAME={filename}")  # Use this format to set output in GitHub Actions
-          with open(os.environ['GITHUB_ENV'], 'a') as env_file:
-              env_file.write(f'MARKDOWN_FILENAME={filename}\n')
-          EOF
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v4  # Ensure this is the latest version
         with:
-          title: "Add generated markdown for C Pointers on ${{ env.MARKDOWN_FILENAME }}"
-          body: "This PR contains a generated markdown file about **C Pointers**."
+          title: "Add generated markdown for ${{ env.MARKDOWN_FILENAME }}"
+          body: "This PR contains a generated markdown file."
           base: main
           branch: topic-update
-          commit-message: "Add generated markdown for C Pointers on ${{ env.MARKDOWN_FILENAME }}"
+          commit-message: "Add generated markdown for ${{ env.MARKDOWN_FILENAME }}"
           token: ${{ secrets.GITHUB_TOKEN }}
