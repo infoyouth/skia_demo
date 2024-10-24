@@ -2,7 +2,7 @@ import datetime
 import requests
 import json
 
-API_KEY = # Replace with your actual Gemini API key
+API_KEY = os.getenv("GEMINI_API_KEY")
 API_URL = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key={API_KEY}"
 
 def load_prompts_from_json():
